@@ -1,28 +1,30 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 //@ts-ignore
+//
 import Vapi from "@vapi-ai/web";
 
-
 const AIDoctorPage = () => {
-   const vapiRef = useRef<any>(null);
-  const [prompt, setPrompt] = useState('');
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const vapiRef = useRef<any>(null);
+  const [prompt, setPrompt] = useState("");
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>(
+    []
+  );
   const [isListening, setIsListening] = useState(false);
-const [isStarted, setIsStarted]=useState(false)
+  const [isStarted, setIsStarted] = useState(false);
   // Initialize Vapi once
   useEffect(() => {
     const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_API_KEY!);
     vapiRef.current = vapi;
 
     // Start event handlers
-    vapi.on('call-start', () => setIsListening(true));
-    vapi.on('call-end', () => setIsListening(false));
+    vapi.on("call-start", () => setIsListening(true));
+    vapi.on("call-end", () => setIsListening(false));
 
-    vapi.on('message', (msg: any) => {
-      if (msg.type === 'transcript') {
-        const role = msg.role === 'user' ? 'Patient' : 'AI Doctor';
+    vapi.on("message", (msg: any) => {
+      if (msg.type === "transcript") {
+        const role = msg.role === "user" ? "Patient" : "AI Doctor";
         setMessages((prev) => [...prev, { role, content: msg.transcript }]);
       }
     });
@@ -34,24 +36,24 @@ const [isStarted, setIsStarted]=useState(false)
     const input = prompt.trim();
     if (!input) return;
 
-    setMessages((prev) => [...prev, { role: 'Patient', content: input }]);
-    setPrompt('');
+    setMessages((prev) => [...prev, { role: "Patient", content: input }]);
+    setPrompt("");
 
     try {
-      const res = await fetch('/api/doctor-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/doctor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: input }),
       });
 
       const { reply } = await res.json();
 
-      setMessages((prev) => [...prev, { role: 'AI Doctor', content: reply }]);
+      setMessages((prev) => [...prev, { role: "AI Doctor", content: reply }]);
 
       // ✅ This speaks the response using Vapi
       vapiRef.current?.say(reply);
     } catch (e) {
-      console.error('Failed to get AI reply', e);
+      console.error("Failed to get AI reply", e);
     }
   };
 
@@ -59,12 +61,10 @@ const [isStarted, setIsStarted]=useState(false)
     try {
       await vapiRef.current?.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!);
     } catch (err) {
-      console.error('Voice start error', err);
+      console.error("Voice start error", err);
     }
   };
-   
 
- 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center p-6">
       <h1 className="text-3xl font-bold mb-6">🩺 AI Doctor Assistant</h1>
@@ -73,7 +73,7 @@ const [isStarted, setIsStarted]=useState(false)
         <div className="bg-gray-900 rounded-lg p-4 h-96 overflow-y-auto">
           {messages.map((msg, i) => (
             <div key={i} className="mb-2">
-              <strong className="text-green-400">{msg.role}:</strong>{' '}
+              <strong className="text-green-400">{msg.role}:</strong>{" "}
               <span className="text-white">{msg.content}</span>
             </div>
           ))}
@@ -100,7 +100,7 @@ const [isStarted, setIsStarted]=useState(false)
           disabled={isStarted}
           className="bg-blue-600 px-6 py-2 rounded hover:bg-blue-700 mt-4"
         >
-          {isStarted ? 'Conversation Active' : '🎤 Start Microphone Chat'}
+          {isStarted ? "Conversation Active" : "🎤 Start Microphone Chat"}
         </button>
       </div>
     </div>
@@ -108,6 +108,3 @@ const [isStarted, setIsStarted]=useState(false)
 };
 
 export default AIDoctorPage;
-
-
-
